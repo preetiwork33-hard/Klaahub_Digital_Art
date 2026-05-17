@@ -11,44 +11,15 @@ import { useCart } from '../context/CartContext';
 import ArtworkCard from '../components/ArtworkCard';
 import toast from 'react-hot-toast';
 
-const DEMO_ARTWORK = {
-  _id: '1',
-  title: 'Neon Dreamscape',
-  description: 'A breathtaking journey through a neon-lit dreamscape where reality blurs with the digital. This artwork captures the essence of a futuristic cityscape at midnight, with luminescent blues and electric cyans dancing across an impossibly deep sky.',
-  price: 2499,
-  likes: 342,
-  rating: 4.8,
-  totalReviews: 47,
-  views: 2841,
-  licenseType: 'Commercial',
-  category: 'Cyberpunk',
-  tags: ['neon', 'cyberpunk', 'digital', 'cityscape', 'futuristic'],
-  resolution: '4096 × 4096 px',
-  fileFormats: ['PNG', 'JPG', 'PSD'],
-  isFeatured: true,
-  artist: { _id: 'a1', name: 'Aria Nova', bio: 'Digital artist specializing in cyberpunk and futuristic aesthetics. Based in Mumbai.', followers: 4200, artworkCount: 28, rating: 4.9 },
-  imageUrl: 'https://images.unsplash.com/photo-1634986666676-ec8fd927c23d?w=1200&q=90',
-  gallery: [
-    'https://images.unsplash.com/photo-1634986666676-ec8fd927c23d?w=800&q=80',
-    'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80',
-    'https://images.unsplash.com/photo-1643101809204-6fb869816dbe?w=800&q=80',
-  ],
-};
-
-const DEMO_RELATED = [
-  { _id: '2', title: 'Cyber Genesis', price: 3199, likes: 218, rating: 4.6, isTrending: true, artist: { name: 'Rex Void' }, imageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80' },
-  { _id: '3', title: 'Abstract Cosmos', price: 1899, likes: 564, rating: 4.9, artist: { name: 'Luna Kai' }, imageUrl: 'https://images.unsplash.com/photo-1643101809204-6fb869816dbe?w=800&q=80' },
-  { _id: '4', title: 'Digital Eden', price: 4299, likes: 127, rating: 4.5, isFeatured: true, artist: { name: 'Zara Flux' }, imageUrl: 'https://images.unsplash.com/photo-1574169208507-84376144848b?w=800&q=80' },
-];
 
 export default function ArtworkDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { addToCart, isInCart } = useCart();
-  const [artwork, setArtwork] = useState(DEMO_ARTWORK);
-  const [related, setRelated] = useState(DEMO_RELATED);
-  const [loading, setLoading] = useState(false);
+  const [artwork, setArtwork] = useState(null);
+  const [related, setRelated] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeImg, setActiveImg] = useState(0);
   const [liked, setLiked] = useState(false);
   const [tab, setTab] = useState('description');
@@ -61,10 +32,10 @@ export default function ArtworkDetailPage() {
       try {
         const res = await artworkAPI.getOne(id);
         if (res.data?.artwork) setArtwork(res.data.artwork);
-      } catch { /* use demo */ }
+      } catch { toast.error("Failed to load artwork."); }
       finally { setLoading(false); }
     };
-    if (id && !id.startsWith('demo')) load();
+    if (id) load();
   }, [id]);
 
   const handleBuyNow = () => {
@@ -80,7 +51,15 @@ export default function ArtworkDetailPage() {
     catch { setLiked(liked); }
   };
 
-  const gallery = artwork.gallery?.length ? artwork.gallery : [artwork.imageUrl];
+  if (loading) {
+    return <div className="min-h-screen pt-20 flex items-center justify-center"><div className="w-10 h-10 border-4 border-cyan-neon border-t-transparent rounded-full animate-spin" /></div>;
+  }
+
+  if (!artwork) {
+    return <div className="min-h-screen pt-20 flex items-center justify-center text-slate-400">Artwork not found.</div>;
+  }
+
+  const gallery = artwork.gallery?.length ? artwork.gallery : (artwork.imageUrl ? [artwork.imageUrl] : []);
 
   return (
     <div className="min-h-screen pt-20">

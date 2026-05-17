@@ -105,11 +105,10 @@ export default function ArtworkCard({ artwork, index = 0 }) {
           <div className="flex gap-2">
             <button
               onClick={handleCart}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold transition-all ${
-                inCart
+              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold transition-all ${inCart
                   ? 'bg-cyan-neon/20 border border-cyan-neon/50 text-cyan-neon'
                   : 'bg-cyan-neon text-navy hover:bg-cyan-glow'
-              }`}
+                }`}
             >
               <ShoppingCart className="w-3.5 h-3.5" />
               {inCart ? 'In Cart' : 'Add to Cart'}

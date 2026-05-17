@@ -69,7 +69,7 @@ export default function ArtistDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (tabParam && ['overview', 'artworks', 'orders', 'analytics', 'profile'].includes(tabParam)) {
+    if (tabParam && ['overview', 'artworks', 'orders', 'profile'].includes(tabParam)) {
       setTab(tabParam);
     }
   }, [tabParam]);
@@ -205,17 +205,7 @@ export default function ArtistDashboard() {
     }],
   };
 
-  const salesData = {
-    labels: MONTHS.slice(0, 7),
-    datasets: [{
-      label: 'Sales',
-      data: currentChartData.sales,
-      backgroundColor: 'rgba(0,212,255,0.25)',
-      borderColor: '#00d4ff',
-      borderWidth: 2,
-      borderRadius: 6,
-    }],
-  };
+
 
   if (loading && artworks.length === 0) {
     return (
@@ -233,9 +223,9 @@ export default function ArtistDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 border-b border-white/5 pb-6">
         <div>
-          <p className="text-cyan-neon text-sm font-semibold tracking-widest uppercase mb-1">Artist Dashboard</p>
+
           <h1 className="text-3xl font-black text-white" style={{ fontFamily: 'Outfit' }}>
-            Welcome, {user?.name || 'Artist'} ✦
+            Welcome  {user?.name || 'Artist'} ✦
           </h1>
           <p className="text-slate-400 text-sm mt-1">Here is how your creations are performing</p>
         </div>
@@ -250,17 +240,16 @@ export default function ArtistDashboard() {
           { id: 'overview', label: 'Overview' },
           { id: 'artworks', label: 'My Artworks' },
           { id: 'orders', label: 'Order History' },
-          { id: 'analytics', label: 'Analytics' },
+
           { id: 'profile', label: 'Edit Profile' },
         ].map(t => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`px-5 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-              tab === t.id
-                ? 'bg-cyan-neon/20 text-cyan-neon border border-cyan-neon/30 shadow-neon-sm'
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
-            }`}
+            className={`px-5 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${tab === t.id
+              ? 'bg-cyan-neon/20 text-cyan-neon border border-cyan-neon/30 shadow-neon-sm'
+              : 'text-slate-400 hover:text-white hover:bg-white/5'
+              }`}
           >
             {t.label}
           </button>
@@ -272,23 +261,12 @@ export default function ArtistDashboard() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard title="Total Revenue" value={`₹${stats.revenue?.toLocaleString() || 0}`} icon={DollarSign} color="from-cyan-400 to-blue-500" />
-            <StatCard title="Artworks Sold" value={stats.sales || 0} icon={Package} color="from-purple-500 to-pink-500" />
+
             <StatCard title="Total Views" value={stats.views?.toLocaleString() || 0} icon={Eye} color="from-emerald-500 to-teal-500" />
             <StatCard title="Uploaded Artworks" value={stats.artworkCount || 0} icon={Award} color="from-orange-500 to-red-500" />
           </div>
 
-          {/* Charts Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="chart-container">
-              <h3 className="text-white font-semibold mb-4">Monthly Revenue Flow</h3>
-              <Line data={revenueData} options={chartOptions} />
-            </div>
-            <div className="chart-container">
-              <h3 className="text-white font-semibold mb-4">Monthly Sales Metrics</h3>
-              <Bar data={salesData} options={chartOptions} />
-            </div>
-          </div>
+
 
           {/* Recent Orders table */}
           <div className="glass-card overflow-hidden">
@@ -304,7 +282,6 @@ export default function ArtistDashboard() {
                     <th className="px-5 py-3 text-slate-400 text-xs uppercase tracking-wider">Buyer</th>
                     <th className="px-5 py-3 text-slate-400 text-xs uppercase tracking-wider">Artwork</th>
                     <th className="px-5 py-3 text-slate-400 text-xs uppercase tracking-wider">Amount</th>
-                    <th className="px-5 py-3 text-slate-400 text-xs uppercase tracking-wider">Net Payout (80%)</th>
                     <th className="px-5 py-3 text-slate-400 text-xs uppercase tracking-wider">Status</th>
                   </tr>
                 </thead>
@@ -382,9 +359,8 @@ export default function ArtistDashboard() {
                       <td className="px-5 py-4 text-slate-300 text-sm font-semibold">{art.sales || 0} purchases</td>
                       <td className="px-5 py-4 text-slate-400 text-sm">{(art.views || 0).toLocaleString()}</td>
                       <td className="px-5 py-4">
-                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                          art.status === 'active' ? 'bg-green-500/15 text-green-400' : 'bg-yellow-500/15 text-yellow-400'
-                        }`}>
+                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${art.status === 'active' ? 'bg-green-500/15 text-green-400' : 'bg-yellow-500/15 text-yellow-400'
+                          }`}>
                           {art.status}
                         </span>
                       </td>
@@ -464,50 +440,7 @@ export default function ArtistDashboard() {
         </motion.div>
       )}
 
-      {/* ─── TAB 4: Comprehensive Analytics ─── */}
-      {tab === 'analytics' && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="chart-container">
-              <h3 className="text-white font-semibold mb-4">Revenue Analytics (₹ Payouts)</h3>
-              <Line data={revenueData} options={{ ...chartOptions, plugins: { ...chartOptions.plugins, legend: { display: true, labels: { color: '#94a3b8' } } } }} />
-            </div>
-            <div className="chart-container">
-              <h3 className="text-white font-semibold mb-4">Volume Metrics (Sales Counts)</h3>
-              <Bar data={salesData} options={chartOptions} />
-            </div>
-          </div>
 
-          <div className="glass-card p-6">
-            <h3 className="text-white font-semibold mb-2">Performance Summary</h3>
-            <p className="text-slate-400 text-sm leading-relaxed mb-4">
-              Your overall average ratings stand strong at <strong className="text-cyan-neon">{stats.rating || '4.8'}★</strong> with a conversion payout yield of 80% per transaction after secure cloud licensing overheads.
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-white/5">
-              <div>
-                <p className="text-slate-500 text-xs uppercase font-medium">Conversion Rate</p>
-                <p className="text-white text-lg font-bold mt-1">~5.4%</p>
-              </div>
-              <div>
-                <p className="text-slate-500 text-xs uppercase font-medium">Views-to-Sales Ratio</p>
-                <p className="text-white text-lg font-bold mt-1">
-                  {stats.views ? `${((stats.sales / stats.views) * 100).toFixed(1)}%` : '0%'}
-                </p>
-              </div>
-              <div>
-                <p className="text-slate-500 text-xs uppercase font-medium">Avg Order Value</p>
-                <p className="text-white text-lg font-bold mt-1">
-                  ₹{sales.length ? Math.round(sales.reduce((acc, s) => acc + s.amount, 0) / sales.length).toLocaleString() : '0'}
-                </p>
-              </div>
-              <div>
-                <p className="text-slate-500 text-xs uppercase font-medium">Escrow Status</p>
-                <p className="text-green-400 text-sm font-semibold mt-1">Fully Audited</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      )}
 
       {/* ─── TAB 5: Artist Profile & Bio / About Section ─── */}
       {tab === 'profile' && (
@@ -533,10 +466,7 @@ export default function ArtistDashboard() {
                   <Mail className="w-4 h-4 text-slate-400 flex-shrink-0" />
                   <span className="truncate">{user?.email}</span>
                 </div>
-                <div className="flex items-center gap-2.5">
-                  <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                  <span>{user?.location || 'Not Specified'}</span>
-                </div>
+
                 {user?.website && (
                   <div className="flex items-center gap-2.5">
                     <Globe className="w-4 h-4 text-slate-400 flex-shrink-0" />
@@ -547,9 +477,9 @@ export default function ArtistDashboard() {
             </div>
 
             <div className="glass-card p-6">
-              <h4 className="text-white font-bold mb-3">Bio / About Preview</h4>
+              <h4 className="text-white font-bold mb-3">Bio</h4>
               <p className="text-slate-400 text-sm leading-relaxed whitespace-pre-line">
-                {user?.bio || 'You have not added a bio yet. Update your profile using the form to let potential art buyers learn more about your creative vision and style!'}
+                {user?.bio || ' Discription about the Artist '}
               </p>
             </div>
           </div>
@@ -557,7 +487,7 @@ export default function ArtistDashboard() {
           {/* Profile Editing Form Panel (Right) */}
           <div className="lg:col-span-8">
             <div className="glass-card p-6">
-              <h3 className="text-xl font-bold text-white mb-4 border-b border-white/5 pb-3">Edit Artist Profile</h3>
+              <h3 className="text-xl font-bold text-white mb-4 border-b border-white/5 pb-3">Edit Profile</h3>
 
               <form onSubmit={handleSaveProfile} className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -568,18 +498,18 @@ export default function ArtistDashboard() {
                       value={profileForm.name}
                       onChange={e => setProfileForm(p => ({ ...p, name: e.target.value }))}
                       className="glass-input"
-                      placeholder="Your artist/studio name"
+                      placeholder="Example: Preeti kumari "
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Art Specialty</label>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Art categories</label>
                     <input
                       type="text"
                       value={profileForm.specialty}
                       onChange={e => setProfileForm(p => ({ ...p, specialty: e.target.value }))}
                       className="glass-input"
-                      placeholder="e.g. Cyberpunk Art, Abstract Digital"
+                      placeholder="e.g. Digital Art"
                     />
                   </div>
                 </div>
@@ -591,9 +521,9 @@ export default function ArtistDashboard() {
                     onChange={e => setProfileForm(p => ({ ...p, bio: e.target.value }))}
                     className="glass-input min-h-28 leading-relaxed"
                     placeholder="Tell buyers about your artistic journey, inspirations, and techniques..."
-                    maxLength="500"
+                    maxLength="100"
                   />
-                  <p className="text-right text-[10px] text-slate-500 mt-1">{profileForm.bio.length}/500 characters</p>
+                  <p className="text-right text-[10px] text-slate-500 mt-1">{profileForm.bio.length}/100 characters</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -607,51 +537,27 @@ export default function ArtistDashboard() {
                       placeholder="e.g. Mumbai, India"
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Personal/Portfolio Website</label>
-                    <input
-                      type="url"
-                      value={profileForm.website}
-                      onChange={e => setProfileForm(p => ({ ...p, website: e.target.value }))}
-                      className="glass-input"
-                      placeholder="https://myart.com"
-                    />
-                  </div>
+
                 </div>
 
                 <div className="border-t border-white/5 pt-5 space-y-4">
                   <h4 className="text-white font-bold text-sm">Social Profiles</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="relative">
-                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input
-                        type="text"
-                        value={profileForm.twitter}
-                        onChange={e => setProfileForm(p => ({ ...p, twitter: e.target.value }))}
-                        className="glass-input pl-9 text-xs"
-                        placeholder="Twitter Handle"
-                      />
+
+
                     </div>
                     <div className="relative">
-                      <Share2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+
                       <input
                         type="text"
                         value={profileForm.instagram}
                         onChange={e => setProfileForm(p => ({ ...p, instagram: e.target.value }))}
                         className="glass-input pl-9 text-xs"
-                        placeholder="Instagram Name"
+                        placeholder="Instagram ID"
                       />
                     </div>
-                    <div className="relative">
-                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input
-                        type="text"
-                        value={profileForm.portfolio}
-                        onChange={e => setProfileForm(p => ({ ...p, portfolio: e.target.value }))}
-                        className="glass-input pl-9 text-xs"
-                        placeholder="ArtStation/Behance"
-                      />
-                    </div>
+
                   </div>
                 </div>
 
@@ -666,7 +572,7 @@ export default function ArtistDashboard() {
                       Saving...
                     </>
                   ) : (
-                    'Save Profile Details'
+                    'Save Details'
                   )}
                 </button>
               </form>

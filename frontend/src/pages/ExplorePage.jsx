@@ -17,39 +17,13 @@ const SORT_OPTIONS = [
 const LICENSE_TYPES = ['All', 'Personal', 'Commercial', 'Extended'];
 const RATINGS = [4, 3, 2, 1];
 
-const DEMO_ARTWORKS = Array.from({ length: 12 }, (_, i) => ({
-  _id: `demo-${i}`,
-  title: ['Neon Dreamscape', 'Cyber Genesis', 'Abstract Cosmos', 'Digital Eden', 'Quantum Portrait', 'Neon Solitude', 'Void Walker', 'Crystal Mind', 'Solar Punk City', 'Dark Matter', 'Pixel Heaven', 'Echo Chamber'][i],
-  price: Math.floor(Math.random() * 4000) + 999,
-  likes: Math.floor(Math.random() * 500) + 50,
-  rating: (Math.random() * 2 + 3).toFixed(1),
-  isFeatured: i % 4 === 0,
-  isTrending: i % 3 === 0,
-  category: CATEGORIES[Math.floor(Math.random() * (CATEGORIES.length - 1)) + 1],
-  artist: { name: ['Aria Nova', 'Rex Void', 'Luna Kai', 'Zara Flux', 'Max Echo', 'Vera Prism'][i % 6] },
-  imageUrl: [
-    'https://images.unsplash.com/photo-1634986666676-ec8fd927c23d?w=800&q=80',
-    'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80',
-    'https://images.unsplash.com/photo-1643101809204-6fb869816dbe?w=800&q=80',
-    'https://images.unsplash.com/photo-1574169208507-84376144848b?w=800&q=80',
-    'https://images.unsplash.com/photo-1633177317976-3f9bc45e1d1d?w=800&q=80',
-    'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
-    'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=800&q=80',
-    'https://images.unsplash.com/photo-1549490349-8643362247b5?w=800&q=80',
-    'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=800&q=80',
-    'https://images.unsplash.com/photo-1481889873009-03c2d06f79eb?w=800&q=80',
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80',
-    'https://images.unsplash.com/photo-1567359781514-3b964e2b04d6?w=800&q=80',
-  ][i],
-}));
-
 export default function ExplorePage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [artworks, setArtworks] = useState(DEMO_ARTWORKS);
+  const [artworks, setArtworks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [gridView, setGridView] = useState(true);
-  const [total, setTotal] = useState(DEMO_ARTWORKS.length);
+  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
 
   const [filters, setFilters] = useState({
@@ -66,8 +40,7 @@ export default function ExplorePage() {
     setLoading(true);
     try {
       const params = {
-        page,
-        limit: 12,
+        page, limit: 12,
         ...(filters.search && { search: filters.search }),
         ...(filters.category !== 'All' && { category: filters.category }),
         ...(filters.sort !== 'latest' && { sort: filters.sort }),
@@ -77,14 +50,14 @@ export default function ExplorePage() {
         ...(filters.rating && { minRating: filters.rating }),
       };
       const res = await artworkAPI.getAll(params);
-      if (res.data?.artworks?.length > 0) {
-        setArtworks(res.data.artworks);
-        setTotal(res.data.total || res.data.artworks.length);
-      } else {
-        setArtworks(DEMO_ARTWORKS);
-      }
-    } catch {
-      setArtworks(DEMO_ARTWORKS);
+      const fetchedArtworks = res.data?.artworks || [];
+
+      setArtworks(fetchedArtworks);
+      setTotal(res.data?.total || fetchedArtworks.length);
+    } catch (error) {
+      console.error("Failed to fetch artworks", error);
+      setArtworks([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -184,11 +157,10 @@ export default function ExplorePage() {
                       <button
                         key={cat}
                         onClick={() => updateFilter('category', cat)}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
-                          filters.category === cat
-                            ? 'bg-cyan-neon/15 text-cyan-neon border border-cyan-neon/30'
-                            : 'text-slate-400 hover:text-white hover:bg-white/5'
-                        }`}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${filters.category === cat
+                          ? 'bg-cyan-neon/15 text-cyan-neon border border-cyan-neon/30'
+                          : 'text-slate-400 hover:text-white hover:bg-white/5'
+                          }`}
                       >
                         {cat}
                       </button>
@@ -225,11 +197,10 @@ export default function ExplorePage() {
                       <button
                         key={lic}
                         onClick={() => updateFilter('license', lic)}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
-                          filters.license === lic
-                            ? 'bg-cyan-neon/15 text-cyan-neon border border-cyan-neon/30'
-                            : 'text-slate-400 hover:text-white hover:bg-white/5'
-                        }`}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${filters.license === lic
+                          ? 'bg-cyan-neon/15 text-cyan-neon border border-cyan-neon/30'
+                          : 'text-slate-400 hover:text-white hover:bg-white/5'
+                          }`}
                       >
                         {lic}
                       </button>
@@ -245,11 +216,10 @@ export default function ExplorePage() {
                       <button
                         key={r}
                         onClick={() => updateFilter('rating', filters.rating == r ? '' : r)}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition-all ${
-                          filters.rating == r
-                            ? 'bg-cyan-neon/15 text-cyan-neon border border-cyan-neon/30'
-                            : 'text-slate-400 hover:text-white hover:bg-white/5'
-                        }`}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition-all ${filters.rating == r
+                          ? 'bg-cyan-neon/15 text-cyan-neon border border-cyan-neon/30'
+                          : 'text-slate-400 hover:text-white hover:bg-white/5'
+                          }`}
                       >
                         {'★'.repeat(r)}{'☆'.repeat(5 - r)} & up
                       </button>

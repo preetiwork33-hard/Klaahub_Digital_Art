@@ -10,7 +10,7 @@ import { useAuth } from '../context/AuthContext';
 const DEMO_ARTIST = {
   _id: 'a1',
   name: 'Aria Nova',
-  bio: 'Digital artist specializing in cyberpunk and futuristic aesthetics. Based in Mumbai, India. I create immersive digital worlds that blur the line between reality and imagination.',
+  bio: 'Add somthing about your Art style ',
   specialty: 'Cyberpunk Art',
   location: 'Mumbai, India',
   followers: 4200,
@@ -107,9 +107,8 @@ export default function ArtistProfilePage() {
 
             <button
               onClick={handleFollow}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
-                following ? 'bg-cyan-neon/15 border border-cyan-neon/50 text-cyan-neon' : 'btn-primary'
-              }`}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${following ? 'bg-cyan-neon/15 border border-cyan-neon/50 text-cyan-neon' : 'btn-primary'
+                }`}
             >
               <Heart className={`w-4 h-4 ${following ? 'fill-cyan-neon' : ''}`} />
               {following ? 'Following' : 'Follow'}

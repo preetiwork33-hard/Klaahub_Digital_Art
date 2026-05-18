@@ -56,10 +56,15 @@ export default function SellArtPage() {
       setUploadProgress(100);
       toast.success('Image uploaded!');
     } catch {
-      // Demo mode - use preview URL
-      setForm(prev => ({ ...prev, imageUrl: URL.createObjectURL(file) }));
+      // Fallback: convert to base64 so the image persists (not a blob URL)
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64 = e.target.result;
+        setForm(prev => ({ ...prev, imageUrl: base64 }));
+      };
+      reader.readAsDataURL(file);
       setUploadProgress(100);
-      toast.success('Image ready! (Demo mode)');
+      toast.success('Image ready!');
     } finally {
       clearInterval(interval);
       setUploading(false);
@@ -112,21 +117,19 @@ export default function SellArtPage() {
     e.preventDefault();
     if (!user) { toast.error('Please login'); navigate('/login'); return; }
     if (!form.title || !form.price || !form.category) { toast.error('Fill all required fields'); return; }
-    if (!form.imageUrl && !preview) { toast.error('Please upload an artwork image'); return; }
+    if (!form.imageUrl) { toast.error('Please upload an artwork image'); return; }
 
     setSubmitting(true);
     try {
       const payload = {
         ...form,
         price: Number(form.price),
-        imageUrl: form.imageUrl || preview,
       };
       const res = await artworkAPI.create(payload);
       toast.success('Artwork published!');
-      navigate(`/artwork/${res.data?.artwork?._id || 'demo'}`);
-    } catch {
-      toast.success('Artwork saved! (Demo mode)');
-      navigate('/dashboard/artist');
+      navigate(`/artwork/${res.data?.artwork?._id}`);
+    } catch (err) {
+      toast.error('Failed to publish artwork. Please try again.');
     } finally {
       setSubmitting(false);
     }

@@ -5,7 +5,7 @@ import { Search, SlidersHorizontal, X, ChevronDown, Grid3x3, List } from 'lucide
 import ArtworkCard from '../components/ArtworkCard';
 import { artworkAPI } from '../services/api';
 
-const CATEGORIES = ['All', 'Fantasy Art', 'Paintings', 'Concept Art', 'Illustrations', '3D Art', 'Anime', 'Abstract', 'Cyberpunk'];
+const DEFAULT_CATEGORIES = [{ name: 'All', count: 0 }];
 const SORT_OPTIONS = [
   { value: 'latest', label: 'Latest' },
   { value: 'trending', label: 'Trending' },
@@ -25,6 +25,23 @@ export default function ExplorePage() {
   const [gridView, setGridView] = useState(true);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data } = await artworkAPI.getCategoryStats();
+        if (data.success) {
+          const fetchedCats = data.stats.map(s => ({ name: s._id, count: s.count }));
+          const totalCount = fetchedCats.reduce((sum, c) => sum + c.count, 0);
+          setCategories([{ name: 'All', count: totalCount }, ...fetchedCats]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch categories", err);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const [filters, setFilters] = useState({
     search: searchParams.get('search') || '',
@@ -153,16 +170,17 @@ export default function ExplorePage() {
                 <div className="glass-card p-4">
                   <h3 className="text-white font-semibold text-sm mb-3 uppercase tracking-wider">Category</h3>
                   <div className="space-y-1">
-                    {CATEGORIES.map(cat => (
+                    {categories.map(cat => (
                       <button
-                        key={cat}
-                        onClick={() => updateFilter('category', cat)}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${filters.category === cat
+                        key={cat.name}
+                        onClick={() => updateFilter('category', cat.name)}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex justify-between items-center ${filters.category === cat.name
                           ? 'bg-cyan-neon/15 text-cyan-neon border border-cyan-neon/30'
                           : 'text-slate-400 hover:text-white hover:bg-white/5'
                           }`}
                       >
-                        {cat}
+                        <span>{cat.name}</span>
+                        <span className="text-xs opacity-60">{cat.count}</span>
                       </button>
                     ))}
                   </div>
@@ -277,7 +295,7 @@ export default function ExplorePage() {
                 <span className="text-slate-400 text-sm">Page {page}</span>
                 <button
                   onClick={() => setPage(p => p + 1)}
-                  disabled={artworks.length < 12}
+                  disabled={page >= Math.ceil(total / 12)}
                   className="btn-outline text-sm py-2 px-5 disabled:opacity-40"
                 >
                   Next

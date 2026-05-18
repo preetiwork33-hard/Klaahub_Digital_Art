@@ -103,7 +103,7 @@ export default function CartPage() {
               className="glass-card p-4 flex items-center gap-4"
             >
               <img
-                src={item.imageUrl || `https://images.unsplash.com/photo-1634986666676-ec8fd927c23d?w=200&q=80`}
+                src={item.imageUrl || '/default-art.png'}
                 alt={item.title}
                 className="w-20 h-20 object-cover rounded-xl border border-white/10 flex-shrink-0"
               />

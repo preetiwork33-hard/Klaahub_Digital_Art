@@ -7,18 +7,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler);
 
-const DEMO_USERS = [
-  { _id: 'u1', name: 'Aria Nova', email: 'aria@demo.com', role: 'artist', status: 'active', joinedDate: '2026-01-10', artworks: 28 },
-  { _id: 'u2', name: 'Rahul M.', email: 'rahul@demo.com', role: 'buyer', status: 'active', joinedDate: '2026-02-14', artworks: 0 },
-  { _id: 'u3', name: 'Rex Void', email: 'rex@demo.com', role: 'artist', status: 'pending', joinedDate: '2026-03-22', artworks: 5 },
-  { _id: 'u4', name: 'Priya S.', email: 'priya@demo.com', role: 'buyer', status: 'active', joinedDate: '2026-04-01', artworks: 0 },
-];
 
-const DEMO_ARTWORKS = [
-  { _id: 'a1', title: 'Neon Dreamscape', artist: 'Aria Nova', price: 2499, status: 'active', sales: 14, imageUrl: 'https://images.unsplash.com/photo-1634986666676-ec8fd927c23d?w=200&q=80' },
-  { _id: 'a2', title: 'Cyber Genesis', artist: 'Rex Void', price: 3199, status: 'pending', sales: 0, imageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200&q=80' },
-  { _id: 'a3', title: 'Abstract Cosmos', artist: 'Luna Kai', price: 1899, status: 'active', sales: 22, imageUrl: 'https://images.unsplash.com/photo-1643101809204-6fb869816dbe?w=200&q=80' },
-];
 
 const revenueData = {
   labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
@@ -37,8 +26,8 @@ const chartOptions = {
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState('overview');
-  const [users, setUsers] = useState(DEMO_USERS);
-  const [artworks, setArtworks] = useState(DEMO_ARTWORKS);
+  const [users, setUsers] = useState([]);
+  const [artworks, setArtworks] = useState([]);
 
   useEffect(() => {
     const load = async () => {

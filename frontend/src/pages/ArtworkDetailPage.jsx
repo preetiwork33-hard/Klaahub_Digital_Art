@@ -8,7 +8,6 @@ import {
 import { artworkAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import ArtworkCard from '../components/ArtworkCard';
 import toast from 'react-hot-toast';
 
 
@@ -18,12 +17,13 @@ export default function ArtworkDetailPage() {
   const { user } = useAuth();
   const { addToCart, isInCart } = useCart();
   const [artwork, setArtwork] = useState(null);
-  const [related, setRelated] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeImg, setActiveImg] = useState(0);
   const [liked, setLiked] = useState(false);
-  const [tab, setTab] = useState('description');
-  const [review, setReview] = useState({ rating: 5, comment: '' });
+  const [likesCount, setLikesCount] = useState(0);
+  const [userRating, setUserRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [ratingSubmitted, setRatingSubmitted] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -31,7 +31,10 @@ export default function ArtworkDetailPage() {
       setLoading(true);
       try {
         const res = await artworkAPI.getOne(id);
-        if (res.data?.artwork) setArtwork(res.data.artwork);
+        if (res.data?.artwork) {
+          setArtwork(res.data.artwork);
+          setLikesCount(res.data.artwork.likesCount || 0);
+        }
       } catch { toast.error("Failed to load artwork."); }
       finally { setLoading(false); }
     };
@@ -46,9 +49,26 @@ export default function ArtworkDetailPage() {
 
   const handleLike = async () => {
     if (!user) { toast.error('Please login to like'); return; }
-    setLiked(!liked);
-    try { await artworkAPI.like(artwork._id); }
-    catch { setLiked(liked); }
+    try {
+      const res = await artworkAPI.like(artwork._id);
+      setLiked(res.data.liked);
+      setLikesCount(res.data.likesCount);
+    } catch { toast.error('Failed to update like'); }
+  };
+
+  const handleRate = async (rating) => {
+    if (!user) { toast.error('Please login to rate'); return; }
+    try {
+      await artworkAPI.rate(artwork._id, rating);
+      setUserRating(rating);
+      setRatingSubmitted(true);
+      setArtwork(prev => ({
+        ...prev,
+        rating: ((prev.rating * prev.totalReviews) + rating) / (prev.totalReviews + 1),
+        totalReviews: prev.totalReviews + 1,
+      }));
+      toast.success('Rating submitted!');
+    } catch { toast.error('Failed to submit rating'); }
   };
 
   if (loading) {
@@ -118,17 +138,17 @@ export default function ArtworkDetailPage() {
                 <span className="tag-pill">{artwork.licenseType} License</span>
               </div>
               <h1 className="text-3xl font-black text-white mb-3" style={{ fontFamily: 'Outfit' }}>{artwork.title}</h1>
-              <div className="flex items-center gap-4 text-sm text-slate-400">
+                <div className="flex items-center gap-4 text-sm text-slate-400">
                 <div className="flex items-center gap-1">
                   <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  <span className="text-white font-semibold">{artwork.rating}</span>
+                  <span className="text-white font-semibold">{Number(artwork.rating || 0).toFixed(1)}</span>
                   <span>({artwork.totalReviews} reviews)</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Eye className="w-4 h-4" /><span>{artwork.views?.toLocaleString()} views</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Heart className="w-4 h-4" /><span>{artwork.likes} likes</span>
+                  <Heart className="w-4 h-4" /><span>{likesCount} likes</span>
                 </div>
               </div>
             </div>
@@ -160,24 +180,26 @@ export default function ArtworkDetailPage() {
                 <Shield className="w-4 h-4 text-cyan-neon" />
                 Includes {artwork.licenseType} License · Lifetime access
               </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={handleBuyNow}
-                  className="btn-primary flex-1 flex items-center justify-center gap-2 py-3"
-                >
-                  <Download className="w-4 h-4" /> Buy Now
-                </button>
-                <button
-                  onClick={() => { if (!user) { toast.error('Login first'); return; } addToCart(artwork); }}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border font-semibold transition-all ${isInCart(artwork._id)
-                      ? 'border-cyan-neon/50 bg-cyan-neon/10 text-cyan-neon'
-                      : 'btn-outline'
-                    }`}
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                  {isInCart(artwork._id) ? 'In Cart' : 'Add to Cart'}
-                </button>
-              </div>
+              {user?._id !== artwork.artist?._id && (
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={handleBuyNow}
+                    className="btn-primary flex-1 flex items-center justify-center gap-2 py-3"
+                  >
+                    <Download className="w-4 h-4" /> Buy Now
+                  </button>
+                  <button
+                    onClick={() => { if (!user) { toast.error('Login first'); return; } addToCart(artwork); }}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border font-semibold transition-all ${isInCart(artwork._id)
+                        ? 'border-cyan-neon/50 bg-cyan-neon/10 text-cyan-neon'
+                        : 'btn-outline'
+                      }`}
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    {isInCart(artwork._id) ? 'In Cart' : 'Add to Cart'}
+                  </button>
+                </div>
+              )}
               <div className="flex items-center gap-3 mt-3">
                 <button onClick={handleLike} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border transition-all text-sm ${liked ? 'border-red-400/40 text-red-400 bg-red-500/10' : 'border-white/10 text-slate-400 hover:border-white/20'}`}>
                   <Heart className={`w-4 h-4 ${liked ? 'fill-red-400' : ''}`} /> Wishlist
@@ -201,97 +223,38 @@ export default function ArtworkDetailPage() {
           </div>
         </div>
 
-        {/* ─── Tabs ─── */}
-        <div className="mb-10">
-          <div className="flex gap-1 glass-card p-1 w-fit mb-6">
-            {['description', 'reviews', 'license'].map(t => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`px-5 py-2 rounded-lg text-sm font-medium capitalize transition-all ${tab === t ? 'bg-cyan-neon/20 text-cyan-neon border border-cyan-neon/30' : 'text-slate-400 hover:text-white'}`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-
-          {tab === 'description' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-6">
-              <p className="text-slate-300 leading-relaxed mb-4">{artwork.description}</p>
-              <div className="flex flex-wrap gap-2 mt-4">
-                {artwork.tags?.map(tag => (
-                  <span key={tag} className="tag-pill">#{tag}</span>
+        {/* Rate this artwork - only shown to buyers */}
+        {user && user._id !== artwork.artist?._id && user.role === 'buyer' && (
+          <div className="glass-card p-4 mb-6">
+            <h3 className="text-white font-semibold text-sm mb-3">Rate this Artwork</h3>
+            {ratingSubmitted ? (
+              <p className="text-cyan-neon text-sm flex items-center gap-2">
+                <CheckCircle className="w-4 h-4" /> Thanks for your rating!
+              </p>
+            ) : (
+              <div className="flex items-center gap-2">
+                {[1, 2, 3, 4, 5].map(star => (
+                  <button
+                    key={star}
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    onClick={() => handleRate(star)}
+                    className="transition-transform hover:scale-125"
+                  >
+                    <Star
+                      className={`w-7 h-7 transition-colors ${
+                        star <= (hoverRating || userRating)
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'text-slate-600'
+                      }`}
+                    />
+                  </button>
                 ))}
+                <span className="text-slate-400 text-xs ml-2">Click to rate</span>
               </div>
-            </motion.div>
-          )}
-
-          {tab === 'reviews' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-              <div className="glass-card p-6">
-                <h3 className="text-white font-semibold mb-4">Write a Review</h3>
-                <div className="flex gap-1 mb-3">
-                  {[1, 2, 3, 4, 5].map(s => (
-                    <button key={s} onClick={() => setReview(p => ({ ...p, rating: s }))}>
-                      <Star className={`w-6 h-6 transition-all ${s <= review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-slate-600'}`} />
-                    </button>
-                  ))}
-                </div>
-                <textarea
-                  value={review.comment}
-                  onChange={e => setReview(p => ({ ...p, comment: e.target.value }))}
-                  placeholder="Share your experience please"
-                  className="glass-input h-24 resize-none mb-3"
-                />
-                <button className="btn-primary text-sm py-2 px-5">Submit Review</button>
-              </div>
-              {[
-                { user: 'Priya S.', rating: 5, comment: 'Absolutely stunning. The resolution is incredible, perfect for my design project.' },
-                { user: 'Rahul M.', rating: 4, comment: 'Beautiful work. Very unique style, exactly what I was looking for.' },
-              ].map((r, i) => (
-                <div key={i} className="glass-card p-5">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-sm font-bold text-navy">{r.user[0]}</div>
-                    <span className="text-white font-medium text-sm">{r.user}</span>
-                    <div className="flex gap-0.5 ml-auto">
-                      {[1, 2, 3, 4, 5].map(s => <Star key={s} className={`w-3.5 h-3.5 ${s <= r.rating ? 'fill-yellow-400 text-yellow-400' : 'text-slate-600'}`} />)}
-                    </div>
-                  </div>
-                  <p className="text-slate-300 text-sm">{r.comment}</p>
-                </div>
-              ))}
-            </motion.div>
-          )}
-
-          {tab === 'license' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-6">
-              <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                <Shield className="w-5 h-5 text-cyan-neon" /> {artwork.licenseType} License
-              </h3>
-              {[
-                { label: 'Personal Use', ok: true },
-                { label: 'Commercial Use', ok: artwork.licenseType !== 'Personal' },
-                { label: 'Print & Merchandise', ok: artwork.licenseType === 'Extended' },
-                { label: 'Social Media', ok: true },
-                { label: 'Resale', ok: false },
-                { label: 'NFT Minting', ok: false },
-              ].map(item => (
-                <div key={item.label} className="flex items-center gap-3 py-2 border-b border-white/5 last:border-0">
-                  <CheckCircle className={`w-5 h-5 ${item.ok ? 'text-green-400' : 'text-red-400 opacity-50'}`} />
-                  <span className={`text-sm ${item.ok ? 'text-slate-300' : 'text-slate-500 line-through'}`}>{item.label}</span>
-                </div>
-              ))}
-            </motion.div>
-          )}
-        </div>
-
-        {/* Related */}
-        <div>
-          <h2 className="section-title text-2xl mb-6">Related Artworks</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {related.map((art, i) => <ArtworkCard key={art._id} artwork={art} index={i} />)}
+            )}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

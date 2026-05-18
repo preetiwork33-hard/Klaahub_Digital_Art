@@ -13,7 +13,6 @@ const navLinks = [
   { label: 'Explore Art', path: '/explore' },
   { label: 'Artists', path: '/artists' },
   { label: 'Categories', path: '/categories' },
-  { label: 'Sell Art', path: '/sell' },
 ];
 
 export default function Navbar() {

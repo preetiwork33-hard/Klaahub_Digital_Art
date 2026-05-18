@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&family=Great+Vibes&family=Alex+Brush&family=Allura&family=Pinyon+Script&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,400,300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&family=Great+Vibes&family=Alex+Brush&family=Allura&family=Pinyon+Script&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -133,7 +134,7 @@ body {
   border: none;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Satoshi', sans-serif;
   letter-spacing: 0.5px;
   box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
   display: inline-flex;
@@ -160,7 +161,7 @@ body {
   border: 1.5px solid #00d4ff;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Satoshi', sans-serif;
   box-shadow: 0 4px 15px rgba(0, 212, 255, 0.15), inset 0 0 10px rgba(0, 212, 255, 0.1);
   display: inline-flex;
   align-items: center;
@@ -182,9 +183,9 @@ body {
 .glass-input {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(0, 212, 255, 0.2);
-  border-radius: 8px;
+  border-radius: 9999px;
   color: #e2e8f0;
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 1.5rem;
   width: 100%;
   outline: none;
   transition: all 0.3s ease;
@@ -212,7 +213,7 @@ body {
 
 /* Section headings */
 .section-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Satoshi', sans-serif;
   font-size: 2.5rem;
   font-weight: 800;
   background: linear-gradient(135deg, #ffffff, #00d4ff);
@@ -294,7 +295,7 @@ body {
   background: rgba(0, 212, 255, 0.1);
   border: 1px solid rgba(0, 212, 255, 0.25);
   color: #00d4ff;
-  border-radius: 100px;
+  border-radius: 9999px;
   padding: 0.25rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 500;

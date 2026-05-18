@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
@@ -6,6 +7,7 @@ import { CartProvider } from './context/CartContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { ProtectedRoute, PublicOnlyRoute } from './components/ProtectedRoute';
+import { artistAPI, artworkAPI } from './services/api';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -83,6 +85,22 @@ function AnimatedRoutes() {
 
 // Inline mini-pages to avoid extra files
 function ArtistsListPage() {
+  const [artists, setArtists] = useState([]);
+
+  useEffect(() => {
+    const fetchArtists = async () => {
+      try {
+        const { data } = await artistAPI.getAll({ limit: 20 });
+        if (data.success) {
+          setArtists(data.artists || []);
+        }
+      } catch (err) {
+        console.error('Failed to load artists', err);
+      }
+    };
+    fetchArtists();
+  }, []);
+
   return (
     <div className="min-h-screen pt-20 px-6 pb-16 max-w-screen-xl mx-auto">
       <div className="mb-10">
@@ -90,16 +108,7 @@ function ArtistsListPage() {
         <h1 className="text-4xl font-black text-white" style={{ fontFamily: 'Outfit' }}>Featured Artists</h1>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { _id: 'a1', name: 'Aria Nova', specialty: 'Cyberpunk Art', artworkCount: 28, followers: 4200 },
-          { _id: 'a2', name: 'Rex Void', specialty: '3D Concept Art', artworkCount: 15, followers: 3100 },
-          { _id: 'a3', name: 'Luna Kai', specialty: 'Abstract Digital', artworkCount: 42, followers: 7800 },
-          { _id: 'a4', name: 'Zara Flux', specialty: 'Fantasy Art', artworkCount: 19, followers: 2900 },
-          { _id: 'a5', name: 'Max Echo', specialty: 'Illustrations', artworkCount: 31, followers: 5100 },
-          { _id: 'a6', name: 'Vera Prism', specialty: 'Anime Art', artworkCount: 24, followers: 6300 },
-          { _id: 'a7', name: 'Nox Digital', specialty: 'Paintings', artworkCount: 17, followers: 1900 },
-          { _id: 'a8', name: 'Solar Ink', specialty: 'Concept Art', artworkCount: 38, followers: 4800 },
-        ].map((artist, i) => (
+        {artists.map((artist, i) => (
           <motion.div
             key={artist._id}
             initial={{ opacity: 0, y: 20 }}
@@ -108,13 +117,13 @@ function ArtistsListPage() {
             className="glass-card glass-card-hover p-6 text-center"
           >
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-3xl font-black text-navy mx-auto mb-4" style={{ fontFamily: 'Outfit' }}>
-              {artist.name[0]}
+              {artist.name ? artist.name[0].toUpperCase() : 'A'}
             </div>
             <h3 className="font-bold text-white text-lg mb-1">{artist.name}</h3>
-            <p className="text-cyan-neon text-sm mb-3">{artist.specialty}</p>
+            <p className="text-cyan-neon text-sm mb-3">{artist.specialty || 'Digital Artist'}</p>
             <div className="flex justify-center gap-4 text-sm text-slate-400 mb-4">
-              <span><strong className="text-white">{artist.artworkCount}</strong> works</span>
-              <span><strong className="text-white">{(artist.followers / 1000).toFixed(1)}K</strong> followers</span>
+              <span><strong className="text-white">{artist.artworkCount || 0}</strong> works</span>
+              <span><strong className="text-white">{((artist.followers || 0) / 1000).toFixed(1)}K</strong> followers</span>
             </div>
             <a href={`/artists/${artist._id}`} className="btn-outline w-full text-sm py-2 block text-center">View Profile</a>
           </motion.div>
@@ -125,16 +134,39 @@ function ArtistsListPage() {
 }
 
 function CategoriesPage() {
-  const cats = [
-    { name: 'Fantasy Art', icon: '🧙', count: 1240, color: 'from-purple-500 to-pink-500' },
-    { name: 'Cyberpunk', icon: '⚡', count: 856, color: 'from-cyan-500 to-blue-500' },
-    { name: 'Abstract', icon: '🎨', count: 2103, color: 'from-orange-500 to-red-500' },
-    { name: '3D Art', icon: '💎', count: 678, color: 'from-emerald-500 to-teal-500' },
-    { name: 'Anime', icon: '🌸', count: 1567, color: 'from-pink-500 to-rose-500' },
-    { name: 'Paintings', icon: '🖌️', count: 934, color: 'from-amber-500 to-orange-500' },
-    { name: 'Concept Art', icon: '🚀', count: 421, color: 'from-blue-500 to-indigo-500' },
-    { name: 'Illustrations', icon: '✏️', count: 1882, color: 'from-violet-500 to-purple-500' },
-  ];
+  const [cats, setCats] = useState([
+    { name: 'Fantasy Art', icon: '🧙', count: 0, color: 'from-purple-500 to-pink-500' },
+    { name: 'Cyberpunk', icon: '⚡', count: 0, color: 'from-cyan-500 to-blue-500' },
+    { name: 'Abstract', icon: '🎨', count: 0, color: 'from-orange-500 to-red-500' },
+    { name: '3D Art', icon: '💎', count: 0, color: 'from-emerald-500 to-teal-500' },
+    { name: 'Anime', icon: '🌸', count: 0, color: 'from-pink-500 to-rose-500' },
+    { name: 'Paintings', icon: '🖌️', count: 0, color: 'from-amber-500 to-orange-500' },
+    { name: 'Concept Art', icon: '🚀', count: 0, color: 'from-blue-500 to-indigo-500' },
+    { name: 'Illustrations', icon: '✏️', count: 0, color: 'from-violet-500 to-purple-500' },
+  ]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const { data } = await artworkAPI.getCategoryStats();
+        if (data.success) {
+          const statsMap = data.stats.reduce((acc, curr) => {
+            acc[curr._id] = curr.count;
+            return acc;
+          }, {});
+          
+          setCats(prev => prev.map(c => ({
+            ...c,
+            count: statsMap[c.name] || 0
+          })));
+        }
+      } catch (error) {
+        console.error("Error fetching category stats", error);
+      }
+    };
+    fetchStats();
+  }, []);
+
   return (
     <div className="min-h-screen pt-20 px-6 pb-16 max-w-screen-xl mx-auto">
       <div className="mb-10">

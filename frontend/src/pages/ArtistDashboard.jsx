@@ -406,7 +406,7 @@ export default function ArtistDashboard() {
                     <th className="px-5 py-3 text-slate-400 text-xs uppercase tracking-wider">Artwork Sold</th>
                     <th className="px-5 py-3 text-slate-400 text-xs uppercase tracking-wider">Date</th>
                     <th className="px-5 py-3 text-slate-400 text-xs uppercase tracking-wider">Charged Amount</th>
-                    <th className="px-5 py-3 text-slate-400 text-xs uppercase tracking-wider">Your Payout (80%)</th>
+
                     <th className="px-5 py-3 text-slate-400 text-xs uppercase tracking-wider">Status</th>
                   </tr>
                 </thead>
@@ -521,9 +521,9 @@ export default function ArtistDashboard() {
                     onChange={e => setProfileForm(p => ({ ...p, bio: e.target.value }))}
                     className="glass-input min-h-28 leading-relaxed"
                     placeholder="Tell buyers about your artistic journey, inspirations, and techniques..."
-                    maxLength="100"
+                    maxLength="800"
                   />
-                  <p className="text-right text-[10px] text-slate-500 mt-1">{profileForm.bio.length}/100 characters</p>
+                  <p className="text-right text-[10px] text-slate-500 mt-1">{profileForm.bio.length}/800 characters</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

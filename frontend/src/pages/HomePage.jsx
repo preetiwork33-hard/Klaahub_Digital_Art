@@ -1,17 +1,18 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, ArrowRight, Zap, Shield, Award, ChevronRight } from 'lucide-react';
+import { artworkAPI } from '../services/api';
 
-const CATEGORIES = [
-  { name: 'Fantasy Art', icon: '🧙', count: 1240, color: 'from-purple-500 to-pink-500' },
-  { name: 'Cyberpunk', icon: '⚡', count: 856, color: 'from-cyan-500 to-blue-500' },
-  { name: 'Abstract', icon: '🎨', count: 2103, color: 'from-orange-500 to-red-500' },
-  { name: '3D Art', icon: '💎', count: 678, color: 'from-emerald-500 to-teal-500' },
-  { name: 'Anime', icon: '🌸', count: 1567, color: 'from-pink-500 to-rose-500' },
-  { name: 'Paintings', icon: '🖌️', count: 934, color: 'from-amber-500 to-orange-500' },
-  { name: 'Concept Art', icon: '🚀', count: 421, color: 'from-blue-500 to-indigo-500' },
-  { name: 'Illustrations', icon: '✏️', count: 1882, color: 'from-violet-500 to-purple-500' },
+const DEFAULT_CATEGORIES = [
+  { name: 'Fantasy Art', icon: '🧙', count: 0, color: 'from-purple-500 to-pink-500' },
+  { name: 'Cyberpunk', icon: '⚡', count: 0, color: 'from-cyan-500 to-blue-500' },
+  { name: 'Abstract', icon: '🎨', count: 0, color: 'from-orange-500 to-red-500' },
+  { name: '3D Art', icon: '💎', count: 0, color: 'from-emerald-500 to-teal-500' },
+  { name: 'Anime', icon: '🌸', count: 0, color: 'from-pink-500 to-rose-500' },
+  { name: 'Paintings', icon: '🖌️', count: 0, color: 'from-amber-500 to-orange-500' },
+  { name: 'Concept Art', icon: '🚀', count: 0, color: 'from-blue-500 to-indigo-500' },
+  { name: 'Illustrations', icon: '✏️', count: 0, color: 'from-violet-500 to-purple-500' },
 ];
 
 // Animated particle
@@ -28,6 +29,29 @@ function Particle({ x, y, size, delay }) {
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const { data } = await artworkAPI.getCategoryStats();
+        if (data.success) {
+          const statsMap = data.stats.reduce((acc, curr) => {
+            acc[curr._id] = curr.count;
+            return acc;
+          }, {});
+          
+          setCategories(prev => prev.map(cat => ({
+            ...cat,
+            count: statsMap[cat.name] || 0
+          })));
+        }
+      } catch (error) {
+        console.error("Error fetching category stats", error);
+      }
+    };
+    fetchStats();
+  }, []);
   const navigate = useNavigate();
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: heroRef });
@@ -145,11 +169,11 @@ export default function HomePage() {
       {/* ─── CATEGORIES ───────────────────────────────────────── */}
       <section className="py-24 px-6 max-w-screen-xl mx-auto">
         <div className="text-center mb-12">
-          <p className="text-cyan-neon text-sm font-semibold tracking-widest uppercase mb-2">✦ Browse</p>
+          <p className="text-cyan-neon text-sm font-semibold tracking-widest uppercase mb-2"></p>
           <h2 className="section-title">Popular Categories</h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {CATEGORIES.map((cat, i) => (
+          {categories.map((cat, i) => (
             <motion.div
               key={cat.name}
               initial={{ opacity: 0, scale: 0.95 }}

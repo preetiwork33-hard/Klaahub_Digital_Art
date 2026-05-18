@@ -38,7 +38,9 @@ export const artworkAPI = {
   update: (id, data) => api.put(`/artworks/${id}`, data),
   delete: (id) => api.delete(`/artworks/${id}`),
   like: (id) => api.post(`/artworks/${id}/like`),
+  rate: (id, rating) => api.post(`/artworks/${id}/rate`, { rating }),
   getByArtist: (artistId) => api.get(`/artworks/artist/${artistId}`),
+  getCategoryStats: () => api.get('/artworks/categories/stats'),
 };
 
 // Artists

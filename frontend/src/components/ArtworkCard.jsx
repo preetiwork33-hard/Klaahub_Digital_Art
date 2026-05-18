@@ -7,14 +7,6 @@ import { artworkAPI } from '../services/api';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-const PLACEHOLDER_IMAGES = [
-  'https://images.unsplash.com/photo-1634986666676-ec8fd927c23d?w=800&q=80',
-  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80',
-  'https://images.unsplash.com/photo-1643101809204-6fb869816dbe?w=800&q=80',
-  'https://images.unsplash.com/photo-1574169208507-84376144848b?w=800&q=80',
-  'https://images.unsplash.com/photo-1633177317976-3f9bc45e1d1d?w=800&q=80',
-  'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
-];
 
 export default function ArtworkCard({ artwork, index = 0 }) {
   const { user } = useAuth();
@@ -24,7 +16,7 @@ export default function ArtworkCard({ artwork, index = 0 }) {
   const [likes, setLikes] = useState(artwork.likes || 0);
   const [imgError, setImgError] = useState(false);
 
-  const imageUrl = (!imgError && artwork.imageUrl) || PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length];
+  const imageUrl = (!imgError && artwork.imageUrl) || '/default-art.png';
 
   const handleLike = async (e) => {
     e.stopPropagation();

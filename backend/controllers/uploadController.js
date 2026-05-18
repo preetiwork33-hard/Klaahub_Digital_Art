@@ -31,7 +31,13 @@ exports.uploadImage = (req, res) => {
     { folder: 'klaahub_artworks' },
     (error, result) => {
       if (error) {
-        return res.status(500).json({ message: 'Cloudinary upload failed', error });
+        console.error('Cloudinary upload failed, falling back to base64:', error);
+        const base64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+        return res.json({
+          success: true,
+          url: base64,
+          public_id: 'local_base64_' + Date.now(),
+        });
       }
       res.json({
         success: true,

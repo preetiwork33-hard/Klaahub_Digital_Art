@@ -25,16 +25,27 @@ exports.analyzeArtworkImage = async (req, res) => {
     // Initialize Google Gen AI client
     const ai = new GoogleGenAI({ apiKey });
 
-    // Download image from URL and convert to base64
-    console.log('Downloading image for Gemini analysis:', imageUrl);
-    const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
-    const base64Image = Buffer.from(imageResponse.data, 'binary').toString('base64');
-    const mimeType = imageResponse.headers['content-type'] || 'image/jpeg';
+    let base64Image, mimeType;
+
+    if (imageUrl.startsWith('data:')) {
+      // Base64 data URL — parse it directly, no HTTP download needed
+      const matches = imageUrl.match(/^data:([^;]+);base64,(.+)$/);
+      if (!matches) throw new Error('Invalid base64 data URL format');
+      mimeType = matches[1];
+      base64Image = matches[2];
+      console.log('Using inline base64 image for Gemini analysis, mimeType:', mimeType);
+    } else {
+      // Remote URL — download and convert to base64
+      console.log('Downloading image for Gemini analysis:', imageUrl);
+      const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+      base64Image = Buffer.from(imageResponse.data, 'binary').toString('base64');
+      mimeType = imageResponse.headers['content-type'] || 'image/jpeg';
+    }
 
     const inlineData = {
       inlineData: {
         data: base64Image,
-        mimeType
+        mimeType,
       }
     };
 

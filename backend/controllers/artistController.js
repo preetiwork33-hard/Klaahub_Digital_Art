@@ -17,8 +17,8 @@ exports.getArtistProfile = async (req, res) => {
 // GET /api/artists (List of artists)
 exports.getArtistsList = async (req, res) => {
   try {
-    const artists = await User.find({ role: 'artist', status: 'active' })
-      .select('name avatar specialty bio joinedDate followers artworkCount rating isVerified');
+    const artists = await User.find({ role: 'artist' })
+      .select('name avatar specialty bio joinedDate followers artworkCount rating isVerified status');
     res.json({ success: true, artists });
   } catch (err) {
     res.status(500).json({ message: err.message });

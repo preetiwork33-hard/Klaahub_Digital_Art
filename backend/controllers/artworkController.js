@@ -1,6 +1,19 @@
 const Artwork = require('../models/Artwork');
 const User = require('../models/User');
 
+// GET /api/artworks/categories/stats
+exports.getCategoryStats = async (req, res) => {
+  try {
+    const stats = await Artwork.aggregate([
+      { $match: { status: 'active' } },
+      { $group: { _id: '$category', count: { $sum: 1 } } }
+    ]);
+    res.json({ success: true, stats });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 // GET /api/artworks
 exports.getArtworks = async (req, res) => {
   try {
@@ -151,6 +164,33 @@ exports.toggleLike = async (req, res) => {
     }
     await artwork.save();
     res.json({ success: true, liked: !liked, likesCount: artwork.likesCount });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+// POST /api/artworks/:id/rate
+exports.rateArtwork = async (req, res) => {
+  try {
+    const { rating } = req.body;
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ message: 'Rating must be 1-5' });
+    }
+    const artwork = await Artwork.findById(req.params.id);
+    if (!artwork) return res.status(404).json({ message: 'Not found' });
+
+    // Recalculate average
+    const newTotal = artwork.totalReviews + 1;
+    const newRating = ((artwork.rating * artwork.totalReviews) + rating) / newTotal;
+    artwork.rating = Math.round(newRating * 10) / 10;
+    artwork.totalReviews = newTotal;
+    await artwork.save();
+
+    // Update artist's average rating
+    const artistArtworks = await Artwork.find({ artist: artwork.artist, status: 'active' });
+    const avgRating = artistArtworks.reduce((s, a) => s + (a.rating || 0), 0) / artistArtworks.length;
+    await User.findByIdAndUpdate(artwork.artist, { rating: Math.round(avgRating * 10) / 10 });
+
+    res.json({ success: true, rating: artwork.rating, totalReviews: artwork.totalReviews });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

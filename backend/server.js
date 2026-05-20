@@ -18,27 +18,35 @@ const app = express();
 /* =========================
    CORS CONFIGURATION
 ========================= */
-
 const allowedOrigins = [
   'http://localhost:5173',
-  'http://localhost:3000',
   'https://digitalartplace.vercel.app'
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
 
-    // allow requests with no origin
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('CORS Not Allowed'));
+      callback(new Error('CORS blocked'));
     }
+
   },
+
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
+    'Origin'
+  ],
 }));
+
 
 /* =========================
    MIDDLEWARES

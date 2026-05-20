@@ -8,30 +8,38 @@ export function CartProvider({ children }) {
   const { user } = useAuth();
   const [cartItems, setCartItems] = useState([]);
 
-  useEffect(() => {
-    const stored = localStorage.getItem('klaahub_cart');
-    if (stored) setCartItems(JSON.parse(stored));
-  }, []);
+  const getCartKey = (currentUser) => {
+    return currentUser ? `klaahub_cart_${currentUser._id}` : 'klaahub_cart_guest';
+  };
 
   useEffect(() => {
-    localStorage.setItem('klaahub_cart', JSON.stringify(cartItems));
-  }, [cartItems]);
+    const key = getCartKey(user);
+    const stored = localStorage.getItem(key);
+    setCartItems(stored ? JSON.parse(stored) : []);
+  }, [user]);
 
   const addToCart = (artwork) => {
     if (cartItems.find(item => item._id === artwork._id)) {
       toast.error('Already in cart');
       return;
     }
-    setCartItems(prev => [...prev, artwork]);
+    const updated = [...cartItems, artwork];
+    setCartItems(updated);
+    localStorage.setItem(getCartKey(user), JSON.stringify(updated));
     toast.success('Added to cart!');
   };
 
   const removeFromCart = (id) => {
-    setCartItems(prev => prev.filter(item => item._id !== id));
+    const updated = cartItems.filter(item => item._id !== id);
+    setCartItems(updated);
+    localStorage.setItem(getCartKey(user), JSON.stringify(updated));
     toast.success('Removed from cart');
   };
 
-  const clearCart = () => setCartItems([]);
+  const clearCart = () => {
+    setCartItems([]);
+    localStorage.setItem(getCartKey(user), JSON.stringify([]));
+  };
 
   const isInCart = (id) => cartItems.some(item => item._id === id);
 

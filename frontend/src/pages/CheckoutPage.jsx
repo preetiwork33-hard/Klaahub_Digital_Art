@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CreditCard, QrCode, Wallet, Smartphone, ShieldCheck,
-  CheckCircle, ArrowLeft, Loader2, Info, Lock
+  CheckCircle, ArrowLeft, Loader2, Info, Lock, Download, FileText, BadgeCheck, Award
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -24,7 +24,12 @@ export default function CheckoutPage() {
   const [activeMethod, setActiveMethod] = useState('card');
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [createdOrder, setCreatedOrder] = useState(null);
-  const [step, setStep] = useState('processing'); // processing, completed
+  const [step, setStep] = useState('processing');
+  const [licenseReady, setLicenseReady] = useState(false);
+  const [generatingLicense, setGeneratingLicense] = useState(false);
+  const [licenseId] = useState(`KLAAHUB-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2,7).toUpperCase()}`);
+  const [txnUpiId] = useState(`klaahub${Math.floor(Math.random()*99999)}@axisbank`);
+  const paymentDate = new Date().toLocaleString('en-IN', { dateStyle: 'long', timeStyle: 'short' });
 
   // Card Form State
   const [cardForm, setCardForm] = useState({
@@ -75,6 +80,31 @@ export default function CheckoutPage() {
       return () => clearInterval(interval);
     }
   }, [activeMethod, timer, paymentSuccess]);
+
+  // Auto-generate license 3 seconds after payment success
+  useEffect(() => {
+    if (paymentSuccess) {
+      setGeneratingLicense(true);
+      const t = setTimeout(() => {
+        setGeneratingLicense(false);
+        setLicenseReady(true);
+      }, 3000);
+      return () => clearTimeout(t);
+    }
+  }, [paymentSuccess]);
+
+  const handleDownloadArt = () => {
+    const item = itemsToBuy[0];
+    if (!item?.imageUrl) { toast.error('Download unavailable'); return; }
+    const link = document.createElement('a');
+    link.href = item.imageUrl;
+    link.setAttribute('download', `${item.title || 'KlaaHub_Art'}.jpg`);
+    link.setAttribute('target', '_blank');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Downloading your licensed artwork!');
+  };
 
   // Derived Values
   const getItems = () => {
@@ -580,64 +610,145 @@ export default function CheckoutPage() {
               </div>
             </motion.div>
           ) : (
-            /* PAYMENT SUCCESS SCREEN */
+            /* PAYMENT SUCCESS — BLUE TICK + LICENSE FLOW */
             <motion.div
               key="success"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="max-w-md mx-auto text-center glass-card p-8 shadow-card flex flex-col items-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="max-w-lg mx-auto space-y-6"
             >
-              {/* Confetti & pulsing check animation */}
+              {/* ── STEP 1: Blue-tick verified banner ── */}
               <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: [0, 1.2, 1] }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
-                className="w-20 h-20 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center mb-6 shadow-neon-sm"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.4 }}
+                className="glass-card p-8 text-center flex flex-col items-center border border-blue-500/30 shadow-[0_0_40px_rgba(59,130,246,0.15)]"
               >
-                <CheckCircle className="w-12 h-12 text-green-400" />
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: [0, 1.3, 1] }}
+                  transition={{ duration: 0.55, ease: 'backOut' }}
+                  className="w-24 h-24 rounded-full bg-blue-500/15 border-2 border-blue-400/50 flex items-center justify-center mb-5 shadow-[0_0_30px_rgba(59,130,246,0.35)]"
+                >
+                  <BadgeCheck className="w-14 h-14 text-blue-400" strokeWidth={1.5} />
+                </motion.div>
+
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
+                  <span className="inline-flex items-center gap-1.5 bg-blue-500/15 border border-blue-400/30 text-blue-300 text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-4">
+                    <BadgeCheck className="w-3.5 h-3.5" /> Payment Verified
+                  </span>
+                  <h2 className="text-3xl font-black text-white mb-1" style={{ fontFamily: 'Outfit' }}>
+                    Payment Successful! 🎉
+                  </h2>
+                  <p className="text-slate-400 text-sm">{paymentDate}</p>
+                </motion.div>
+
+                {/* Transaction summary */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="w-full mt-6 space-y-2 text-xs font-mono bg-white/3 border border-white/5 rounded-2xl p-4 text-left"
+                >
+                  {[
+                    ['Txn ID', createdOrder?.payment?.razorpayPaymentId || `PAY${Date.now().toString().slice(-9)}`],
+                    ['UPI / Channel', txnUpiId],
+                    ['Amount Paid', `₹${totalAmount.toLocaleString()}`],
+                    ['Method', activeMethod.toUpperCase()],
+                    ['Status', '✅ CONFIRMED'],
+                  ].map(([label, val]) => (
+                    <div key={label} className="flex justify-between gap-2">
+                      <span className="text-slate-500">{label}</span>
+                      <span className={`text-white font-semibold truncate max-w-[200px] ${label === 'Amount Paid' ? 'text-cyan-neon' : ''}`}>{val}</span>
+                    </div>
+                  ))}
+                </motion.div>
               </motion.div>
 
-              <h2 className="text-3xl font-black text-white mb-2" style={{ fontFamily: 'Outfit' }}>Payment Verified!</h2>
-              <p className="text-cyan-neon font-semibold text-sm mb-4 tracking-widest uppercase">Transaction Successful</p>
+              {/* ── STEP 2: License generation ── */}
+              <AnimatePresence mode="wait">
+                {generatingLicense && (
+                  <motion.div
+                    key="generating"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="glass-card p-6 text-center border border-cyan-neon/20"
+                  >
+                    <Loader2 className="w-8 h-8 text-cyan-neon animate-spin mx-auto mb-3" />
+                    <p className="text-white font-semibold text-sm">Generating your Art License...</p>
+                    <p className="text-slate-500 text-xs mt-1">Creating certificate with ownership details</p>
+                  </motion.div>
+                )}
 
-              <p className="text-slate-400 text-sm leading-relaxed mb-6">
-                Thank you for your purchase! The artwork licenses have been generated and added to your buyer collection. Artist metrics have been updated in real-time.
-              </p>
+                {licenseReady && (
+                  <motion.div
+                    key="license"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="glass-card overflow-hidden border border-cyan-neon/30 shadow-[0_0_30px_rgba(0,212,255,0.1)]"
+                  >
+                    {/* License header */}
+                    <div className="bg-gradient-to-r from-cyan-500/20 via-blue-500/15 to-indigo-500/20 border-b border-white/10 p-5 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-cyan-neon/20 border border-cyan-neon/40 flex items-center justify-center">
+                          <Award className="w-5 h-5 text-cyan-neon" />
+                        </div>
+                        <div>
+                          <p className="text-white font-black text-sm" style={{ fontFamily: 'Outfit' }}>KlaaHub Digital License</p>
+                          <p className="text-slate-400 text-[10px] uppercase tracking-widest">Official Ownership Certificate</p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] bg-green-500/15 border border-green-500/30 text-green-400 font-bold uppercase px-2.5 py-1 rounded-full">
+                        ✓ VALID
+                      </span>
+                    </div>
 
-              {/* Order breakdown */}
-              <div className="w-full text-left space-y-2 border-t border-b border-white/5 py-4 mb-6 text-xs text-slate-300 font-mono bg-navy-light/20 px-4 rounded-xl">
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Order ID:</span>
-                  <span className="text-white">{createdOrder?._id || 'ORD-000000000'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Transaction ID:</span>
-                  <span className="text-white">{createdOrder?.payment?.razorpayPaymentId || 'TXN-9999999'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Total Charged:</span>
-                  <span className="text-cyan-neon font-bold font-sans">₹{totalAmount.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Payment Channel:</span>
-                  <span className="text-white capitalize">{activeMethod}</span>
-                </div>
-              </div>
+                    {/* License body */}
+                    <div className="p-5 space-y-3 text-sm font-mono">
+                      {[
+                        ['License ID', licenseId],
+                        ['Art Title', itemsToBuy[0]?.title || createdOrder?.items?.[0]?.artwork?.title || 'Digital Artwork'],
+                        ['Artist', itemsToBuy[0]?.artist?.name || 'KlaaHub Artist'],
+                        ['Buyer', user?.name || 'Collector'],
+                        ['Purchase Amount', `₹${totalAmount.toLocaleString()}`],
+                        ['UPI Paid To', txnUpiId],
+                        ['License Type', itemsToBuy[0]?.licenseType || 'Commercial'],
+                        ['Issued On', paymentDate],
+                      ].map(([label, val]) => (
+                        <div key={label} className="flex justify-between gap-2 border-b border-white/5 pb-2 last:border-0 last:pb-0">
+                          <span className="text-slate-500 shrink-0">{label}</span>
+                          <span className={`text-right truncate max-w-[200px] font-semibold ${label === 'Purchase Amount' ? 'text-cyan-neon' : 'text-white'}`}>{val}</span>
+                        </div>
+                      ))}
+                    </div>
 
-              <div className="space-y-3 w-full">
-                <button
-                  onClick={() => navigate('/dashboard/buyer')}
-                  className="btn-primary w-full py-3.5 text-sm font-bold flex items-center justify-center gap-2"
-                >
-                  <CheckCircle className="w-4 h-4" /> Go to Buyer Dashboard
-                </button>
-                <button
-                  onClick={() => navigate('/explore')}
-                  className="btn-outline w-full py-3 text-sm text-slate-300 hover:text-white"
-                >
-                  Continue Browsing
-                </button>
-              </div>
+                    {/* License footer — terms */}
+                    <div className="px-5 pb-4">
+                      <p className="text-slate-600 text-[10px] leading-relaxed border-t border-white/5 pt-3">
+                        This certificate grants the buyer the rights specified under the selected license type. Unauthorized redistribution or resale of this artwork without permission is prohibited. KlaaHub acts as a secure marketplace escrow.
+                      </p>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="p-5 pt-0 space-y-3">
+                      <button
+                        onClick={handleDownloadArt}
+                        className="btn-primary w-full py-3.5 text-sm font-bold flex items-center justify-center gap-2 shadow-neon"
+                      >
+                        <Download className="w-4 h-4" /> Download Licensed Artwork
+                      </button>
+                      <button
+                        onClick={() => navigate('/dashboard/buyer')}
+                        className="btn-outline w-full py-3 text-sm text-slate-300 hover:text-white flex items-center justify-center gap-2"
+                      >
+                        <FileText className="w-4 h-4" /> View in My Library
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           )}
         </AnimatePresence>

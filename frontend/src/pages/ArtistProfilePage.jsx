@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Star, Package, Grid3x3, Globe, MapPin, Share2 } from 'lucide-react';
+import { Star, Package, Grid3x3, Globe, MapPin, Share2, Mail } from 'lucide-react';
 import ArtworkCard from '../components/ArtworkCard';
 import { artistAPI, artworkAPI } from '../services/api';
 import toast from 'react-hot-toast';
@@ -13,7 +13,7 @@ export default function ArtistProfilePage() {
   const [artist, setArtist] = useState(null);
   const [artworks, setArtworks] = useState([]);
   const [following, setFollowing] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
@@ -33,6 +33,14 @@ export default function ArtistProfilePage() {
     if (id) load();
   }, [id]);
 
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-20 flex items-center justify-center text-slate-400">
+        <div className="animate-pulse">Loading profile...</div>
+      </div>
+    );
+  }
 
   if (!artist) {
     return <div className="min-h-screen pt-20 flex items-center justify-center text-slate-400">Artist not found.</div>;
@@ -67,7 +75,10 @@ export default function ArtistProfilePage() {
               )}
             </div>
             <p className="text-cyan-neon text-sm font-semibold mb-1">{artist.specialty}</p>
-            <div className="flex items-center gap-3 text-slate-400 text-sm">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-slate-400 text-sm">
+              {artist.email && (
+                <span className="flex items-center gap-1"><Mail className="w-3.5 h-3.5" />{artist.email}</span>
+              )}
               {artist.location && (
                 <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{artist.location}</span>
               )}

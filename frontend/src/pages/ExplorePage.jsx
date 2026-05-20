@@ -80,7 +80,18 @@ export default function ExplorePage() {
     }
   }, [filters, page]);
 
-  useEffect(() => { fetchArtworks(); }, [fetchArtworks]);
+  useEffect(() => {
+    const searchVal = searchParams.get('search') || '';
+    const catVal = searchParams.get('category') || 'All';
+    setFilters(prev => ({
+      ...prev,
+      search: searchVal,
+      category: catVal
+    }));
+    setPage(1);
+  }, [searchParams]);
+
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); fetchArtworks(); }, [fetchArtworks]);
 
   const updateFilter = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));

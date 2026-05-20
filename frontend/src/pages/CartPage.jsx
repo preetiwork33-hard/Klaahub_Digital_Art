@@ -13,6 +13,23 @@ export default function CartPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
+  if (user?.role === 'artist') {
+    return (
+      <div className="min-h-screen pt-20 flex items-center justify-center px-6">
+        <div className="text-center max-w-sm">
+          <div className="w-24 h-24 rounded-3xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-6">
+            <X className="w-10 h-10 text-red-400" />
+          </div>
+          <h2 className="text-2xl font-black text-white mb-3" style={{ fontFamily: 'Outfit' }}>Access Denied</h2>
+          <p className="text-slate-400 mb-6">Cart and buying functionality are restricted to buyers to maintain marketplace separation and privacy.</p>
+          <button onClick={() => navigate('/dashboard/artist')} className="btn-primary flex items-center gap-2 mx-auto">
+            Go to Dashboard <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const handleCheckout = async () => {
     if (!user) { toast.error('Please login to checkout'); navigate('/login'); return; }
     if (cartItems.length === 0) return;

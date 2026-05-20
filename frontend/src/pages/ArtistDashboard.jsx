@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { artistAPI, artworkAPI, orderAPI } from '../services/api';
+import { artistAPI, artworkAPI, orderAPI, uploadAPI } from '../services/api';
 import toast from 'react-hot-toast';
 import {
   Chart as ChartJS, CategoryScale, LinearScale, PointElement,
@@ -86,6 +86,28 @@ export default function ArtistDashboard() {
     portfolio: user?.socials?.portfolio || '',
   });
   const [savingProfile, setSavingProfile] = useState(false);
+
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setAvatarPreview(URL.createObjectURL(file));
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const res = await uploadAPI.image(formData);
+      const uploadedUrl = res.data.url;
+      await updateUser({ avatar: uploadedUrl });
+      toast.success('Profile picture updated successfully!');
+    } catch (err) {
+      toast.error('Failed to upload profile picture.');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -448,13 +470,26 @@ export default function ArtistDashboard() {
           {/* Profile Preview Panel (Left) */}
           <div className="lg:col-span-4 space-y-6">
             <div className="glass-card p-6 text-center flex flex-col items-center">
-              <div className="w-28 h-28 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center overflow-hidden mb-4 shadow-neon-sm border-2 border-cyan-neon/30">
-                {user?.avatar ? (
-                  <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-4xl font-black text-navy">{user?.name?.[0]?.toUpperCase() || 'A'}</span>
-                )}
+              <div className="relative group w-28 h-28 mb-4">
+                <div className="w-28 h-28 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center overflow-hidden shadow-neon-sm border-2 border-cyan-neon/30">
+                  {avatarPreview || user?.avatar ? (
+                    <img src={avatarPreview || user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-4xl font-black text-navy">{user?.name?.[0]?.toUpperCase() || 'A'}</span>
+                  )}
+                </div>
+                <label className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center cursor-pointer text-white text-xs font-semibold">
+                  <Upload className="w-5 h-5 mb-1" />
+                  Upload Photo
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                  />
+                </label>
               </div>
+              {uploadingAvatar && <p className="text-xs text-cyan-neon animate-pulse mb-2">Uploading photo...</p>}
 
               <h3 className="text-xl font-bold text-white mb-1">{user?.name}</h3>
               <span className="text-xs uppercase font-mono tracking-widest text-cyan-neon bg-cyan-neon/15 px-3 py-1 rounded-full border border-cyan-neon/20">
@@ -466,6 +501,13 @@ export default function ArtistDashboard() {
                   <Mail className="w-4 h-4 text-slate-400 flex-shrink-0" />
                   <span className="truncate">{user?.email}</span>
                 </div>
+
+                {user?.location && (
+                  <div className="flex items-center gap-2.5">
+                    <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    <span className="truncate">{user.location}</span>
+                  </div>
+                )}
 
                 {user?.website && (
                   <div className="flex items-center gap-2.5">

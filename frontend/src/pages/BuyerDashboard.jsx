@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Download, Heart, Package, History, Bell, Star, Eye, CreditCard, ExternalLink, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Download, Heart, Package, History, Bell, Star, Eye, CreditCard, ExternalLink, ArrowRight, ShieldCheck, User, Mail, MapPin, Upload, Globe } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { orderAPI, wishlistAPI } from '../services/api';
+import { orderAPI, wishlistAPI, uploadAPI } from '../services/api';
 import toast from 'react-hot-toast';
 
 export default function BuyerDashboard() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
@@ -16,8 +16,67 @@ export default function BuyerDashboard() {
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Profile Form State
+  const [profileForm, setProfileForm] = useState({
+    name: user?.name || '',
+    bio: user?.bio || '',
+    location: user?.location || '',
+    website: user?.website || '',
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
   useEffect(() => {
-    if (tabParam && ['library', 'wishlist', 'orders', 'payments'].includes(tabParam)) {
+    if (user) {
+      setProfileForm({
+        name: user.name || '',
+        bio: user.bio || '',
+        location: user.location || '',
+        website: user.website || '',
+      });
+    }
+  }, [user]);
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setAvatarPreview(URL.createObjectURL(file));
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const res = await uploadAPI.image(formData);
+      const uploadedUrl = res.data.url;
+      await updateUser({ avatar: uploadedUrl });
+      toast.success('Profile picture updated successfully!');
+    } catch (err) {
+      toast.error('Failed to upload profile picture.');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    setSavingProfile(true);
+    try {
+      await updateUser({
+        name: profileForm.name,
+        bio: profileForm.bio,
+        location: profileForm.location,
+        website: profileForm.website,
+      });
+      toast.success('Profile updated successfully!');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to save profile changes.');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  useEffect(() => {
+    if (tabParam && ['library', 'wishlist', 'orders', 'payments', 'profile'].includes(tabParam)) {
       setTab(tabParam);
     }
   }, [tabParam]);
@@ -88,6 +147,7 @@ export default function BuyerDashboard() {
     { id: 'wishlist', label: 'Wishlist', icon: Heart },
     { id: 'orders', label: 'Order History', icon: Package },
     { id: 'payments', label: 'Receipts', icon: CreditCard },
+    { id: 'profile', label: 'Edit Profile', icon: User },
   ];
 
   if (loading && orders.length === 0 && wishlist.length === 0) {
@@ -354,6 +414,141 @@ export default function BuyerDashboard() {
                   No payment invoices available.
                 </div>
               )}
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ─── TAB 5: Buyer Profile & Bio ─── */}
+      {tab === 'profile' && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Profile Preview Panel (Left) */}
+          <div className="lg:col-span-4 space-y-6">
+            <div className="glass-card p-6 text-center flex flex-col items-center">
+              <div className="relative group w-28 h-28 mb-4">
+                <div className="w-28 h-28 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center overflow-hidden shadow-neon-sm border-2 border-cyan-neon/30">
+                  {avatarPreview || user?.avatar ? (
+                    <img src={avatarPreview || user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-4xl font-black text-navy">{user?.name?.[0]?.toUpperCase() || 'B'}</span>
+                  )}
+                </div>
+                <label className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center cursor-pointer text-white text-xs font-semibold">
+                  <Upload className="w-5 h-5 mb-1" />
+                  Upload Photo
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+              {uploadingAvatar && <p className="text-xs text-cyan-neon animate-pulse mb-2">Uploading photo...</p>}
+
+              <h3 className="text-xl font-bold text-white mb-1">{user?.name}</h3>
+              <span className="text-xs uppercase font-mono tracking-widest text-cyan-neon bg-cyan-neon/15 px-3 py-1 rounded-full border border-cyan-neon/20">
+                Art Collector
+              </span>
+
+              <div className="w-full space-y-3 mt-6 border-t border-white/5 pt-6 text-left text-sm text-slate-300">
+                <div className="flex items-center gap-2.5">
+                  <Mail className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                  <span className="truncate">{user?.email}</span>
+                </div>
+
+                {user?.location && (
+                  <div className="flex items-center gap-2.5">
+                    <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    <span className="truncate">{user.location}</span>
+                  </div>
+                )}
+
+                {user?.website && (
+                  <div className="flex items-center gap-2.5">
+                    <Globe className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    <a href={user.website} target="_blank" rel="noreferrer" className="text-cyan-neon hover:underline truncate">{user.website}</a>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="glass-card p-6">
+              <h4 className="text-white font-bold mb-3">About Me</h4>
+              <p className="text-slate-400 text-sm leading-relaxed whitespace-pre-line">
+                {user?.bio || 'No bio written yet. Tell artists and the community about your collection goals.'}
+              </p>
+            </div>
+          </div>
+
+          {/* Profile Editing Form Panel (Right) */}
+          <div className="lg:col-span-8">
+            <div className="glass-card p-6">
+              <h3 className="text-xl font-bold text-white mb-4 border-b border-white/5 pb-3">Edit Profile</h3>
+
+              <form onSubmit={handleSaveProfile} className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Full Name</label>
+                    <input
+                      type="text"
+                      value={profileForm.name}
+                      onChange={e => setProfileForm(p => ({ ...p, name: e.target.value }))}
+                      className="glass-input"
+                      placeholder="e.g. Alex Mercer"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Location</label>
+                    <input
+                      type="text"
+                      value={profileForm.location}
+                      onChange={e => setProfileForm(p => ({ ...p, location: e.target.value }))}
+                      className="glass-input"
+                      placeholder="e.g. New York, USA"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Bio / Collector Statement</label>
+                  <textarea
+                    value={profileForm.bio}
+                    onChange={e => setProfileForm(p => ({ ...p, bio: e.target.value }))}
+                    className="glass-input min-h-28 leading-relaxed"
+                    placeholder="Describe your taste in digital art, preferred categories, or projects..."
+                    maxLength="500"
+                  />
+                  <p className="text-right text-[10px] text-slate-500 mt-1">{profileForm.bio.length}/500 characters</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Personal Website / Portfolio Link</label>
+                  <input
+                    type="url"
+                    value={profileForm.website}
+                    onChange={e => setProfileForm(p => ({ ...p, website: e.target.value }))}
+                    className="glass-input"
+                    placeholder="https://example.com"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={savingProfile}
+                  className="btn-primary py-3 px-8 text-sm font-semibold flex items-center justify-center gap-2"
+                >
+                  {savingProfile ? (
+                    <>
+                      <div className="w-4 h-4 rounded-full border-2 border-navy border-t-transparent animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Details'
+                  )}
+                </button>
+              </form>
             </div>
           </div>
         </motion.div>

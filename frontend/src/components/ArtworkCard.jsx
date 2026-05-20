@@ -13,7 +13,7 @@ export default function ArtworkCard({ artwork, index = 0 }) {
   const { addToCart, isInCart } = useCart();
   const navigate = useNavigate();
   const [liked, setLiked] = useState(artwork.isLiked || false);
-  const [likes, setLikes] = useState(artwork.likes || 0);
+  const [likes, setLikes] = useState(artwork.likesCount ?? artwork.likes?.length ?? 0);
   const [imgError, setImgError] = useState(false);
 
   const imageUrl = (!imgError && artwork.imageUrl) || '/default-art.png';
@@ -23,9 +23,9 @@ export default function ArtworkCard({ artwork, index = 0 }) {
     e.preventDefault();
     if (!user) { toast.error('Please login to like artworks'); return; }
     try {
-      await artworkAPI.like(artwork._id);
-      setLiked(!liked);
-      setLikes(prev => liked ? prev - 1 : prev + 1);
+      const res = await artworkAPI.like(artwork._id);
+      setLiked(res.data.liked);
+      setLikes(res.data.likesCount);
     } catch { toast.error('Action failed'); }
   };
 

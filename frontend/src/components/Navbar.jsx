@@ -127,14 +127,16 @@ export default function Navbar() {
               </button>
 
               {/* Cart */}
-              <Link to="/cart" className="relative p-2.5 rounded-full text-slate-400 hover:text-cyan-neon hover:bg-white/5 transition-all border border-transparent hover:border-cyan-neon/20">
-                <ShoppingCart className="w-5 h-5" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-cyan-neon text-navy text-xs font-bold rounded-full flex items-center justify-center animate-pulse-neon shadow-lg">
-                    {cartCount}
-                  </span>
-                )}
-              </Link>
+              {user?.role !== 'artist' && (
+                <Link to="/cart" className="relative p-2.5 rounded-full text-slate-400 hover:text-cyan-neon hover:bg-white/5 transition-all border border-transparent hover:border-cyan-neon/20">
+                  <ShoppingCart className="w-5 h-5" />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-cyan-neon text-navy text-xs font-bold rounded-full flex items-center justify-center animate-pulse-neon shadow-lg">
+                      {cartCount}
+                    </span>
+                  )}
+                </Link>
+              )}
 
               {user ? (
                 <div className="relative" ref={profileRef}>

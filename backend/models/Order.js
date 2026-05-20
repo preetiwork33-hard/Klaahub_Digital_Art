@@ -29,10 +29,9 @@ const orderSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Auto-calculate fees
-orderSchema.pre('save', function (next) {
+orderSchema.pre('save', function () {
   this.platformFee = Math.round(this.totalAmount * 0.20);
   this.artistPayout = this.totalAmount - this.platformFee;
-  next();
 });
 
 module.exports = mongoose.model('Order', orderSchema);

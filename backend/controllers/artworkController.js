@@ -23,7 +23,19 @@ exports.getArtworks = async (req, res) => {
     } = req.query;
 
     const query = { status: 'active' };
-    if (search) query.$text = { $search: search };
+    if (search) {
+      const matchingArtists = await User.find({
+        role: 'artist',
+        name: { $regex: search, $options: 'i' }
+      }).select('_id');
+      const artistIds = matchingArtists.map(u => u._id);
+
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { tags: { $regex: search, $options: 'i' } },
+        { artist: { $in: artistIds } }
+      ];
+    }
     if (category) query.category = category;
     if (license) query.licenseType = license;
     if (priceMin || priceMax) {

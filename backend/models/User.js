@@ -24,6 +24,7 @@ const userSchema = new mongoose.Schema({
   purchasedArtworks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Artwork' }],
   totalRevenue: { type: Number, default: 0 },
   joinedDate: { type: String, default: () => new Date().toISOString().slice(0, 7) },
+  artworkCount: { type: Number, default: 0 },
 }, { timestamps: true });
 
 userSchema.pre('save', async function () {

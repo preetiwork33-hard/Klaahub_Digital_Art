@@ -154,6 +154,8 @@ exports.deleteArtwork = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized' });
 
     await artwork.deleteOne();
+    // Decrement artist artwork count
+    await User.findByIdAndUpdate(artwork.artist, { $inc: { artworkCount: -1 } });
     res.json({ success: true, message: 'Artwork deleted' });
   } catch (err) {
     res.status(500).json({ message: err.message });

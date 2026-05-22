@@ -126,6 +126,18 @@ export default function Navbar() {
                 <Search className="w-5 h-5" />
               </button>
 
+              {/* Wishlist */}
+              {user && user.role === 'buyer' && (
+                <Link to="/dashboard/buyer?tab=wishlist" className="relative p-2.5 rounded-full text-slate-400 hover:text-pink-400 hover:bg-white/5 transition-all border border-transparent hover:border-pink-500/20" title="Wishlist">
+                  <Heart className="w-5 h-5" />
+                  {user.wishlist?.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-pink-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse-neon shadow-lg">
+                      {user.wishlist.length}
+                    </span>
+                  )}
+                </Link>
+              )}
+
               {/* Cart */}
               {user?.role !== 'artist' && (
                 <Link to="/cart" className="relative p-2.5 rounded-full text-slate-400 hover:text-cyan-neon hover:bg-white/5 transition-all border border-transparent hover:border-cyan-neon/20">

@@ -7,7 +7,7 @@ import { orderAPI, wishlistAPI, uploadAPI } from '../services/api';
 import toast from 'react-hot-toast';
 
 export default function BuyerDashboard() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, setUser } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
@@ -133,6 +133,10 @@ export default function BuyerDashboard() {
       const res = await wishlistAPI.toggle(artworkId);
       if (res.data?.success) {
         setWishlist(prev => prev.filter(w => w._id !== artworkId));
+        setUser(prev => {
+          if (!prev) return prev;
+          return { ...prev, wishlist: (prev.wishlist || []).filter(id => id !== artworkId) };
+        });
         toast.success('Removed from wishlist!');
       }
     } catch {
@@ -143,10 +147,10 @@ export default function BuyerDashboard() {
   const totalSpent = orders.reduce((sum, order) => sum + (order.amount || 0), 0);
 
   const tabs = [
-    { id: 'library', label: 'My Library', icon: Download },
-    { id: 'wishlist', label: 'Wishlist', icon: Heart },
-    { id: 'orders', label: 'Order History', icon: Package },
-    { id: 'payments', label: 'Receipts', icon: CreditCard },
+    { id: 'library', label: `My Library (${orders.length})`, icon: Download },
+    { id: 'wishlist', label: `Wishlist (${wishlist.length})`, icon: Heart },
+    { id: 'orders', label: `Order History (${orders.length})`, icon: Package },
+    { id: 'payments', label: `Receipts (${orders.length})`, icon: CreditCard },
     { id: 'profile', label: 'Edit Profile', icon: User },
   ];
 

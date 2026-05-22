@@ -5,7 +5,7 @@ import {
   Heart, ShoppingCart, Star, Download, Shield, Share2,
   ZoomIn, ChevronLeft, ChevronRight, Tag, Eye, CheckCircle
 } from 'lucide-react';
-import { artworkAPI } from '../services/api';
+import { artworkAPI, wishlistAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
@@ -14,16 +14,23 @@ import toast from 'react-hot-toast';
 export default function ArtworkDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const { addToCart, isInCart } = useCart();
   const [artwork, setArtwork] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeImg, setActiveImg] = useState(0);
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
+  const [wishlisted, setWishlisted] = useState(false);
   const [userRating, setUserRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [ratingSubmitted, setRatingSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (user && artwork) {
+      setWishlisted(user.wishlist?.includes(artwork._id) || false);
+    }
+  }, [user, artwork]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -54,6 +61,31 @@ export default function ArtworkDetailPage() {
       setLiked(res.data.liked);
       setLikesCount(res.data.likesCount);
     } catch { toast.error('Failed to update like'); }
+  };
+
+  const handleWishlist = async () => {
+    if (!user) { toast.error('Please login to add to wishlist'); return; }
+    if (user.role === 'artist') {
+      toast.error('Artists cannot wishlist artworks');
+      return;
+    }
+    try {
+      const res = await wishlistAPI.toggle(artwork._id);
+      if (res.data?.success) {
+        setWishlisted(res.data.inWishlist);
+        setUser(prev => {
+          if (!prev) return prev;
+          const currentWishlist = prev.wishlist || [];
+          const updatedWishlist = res.data.inWishlist
+            ? [...currentWishlist, artwork._id]
+            : currentWishlist.filter(id => id !== artwork._id);
+          return { ...prev, wishlist: updatedWishlist };
+        });
+        toast.success(res.data.inWishlist ? 'Added to wishlist!' : 'Removed from wishlist!');
+      }
+    } catch {
+      toast.error('Failed to update wishlist');
+    }
   };
 
   const handleRate = async (rating) => {
@@ -201,10 +233,12 @@ export default function ArtworkDetailPage() {
                 </div>
               )}
               <div className="flex items-center gap-3 mt-3">
-                <button onClick={handleLike} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border transition-all text-sm ${liked ? 'border-red-400/40 text-red-400 bg-red-500/10' : 'border-white/10 text-slate-400 hover:border-white/20'}`}>
-                  <Heart className={`w-4 h-4 ${liked ? 'fill-red-400' : ''}`} /> Wishlist
-                </button>
-                <button className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border border-white/10 text-slate-400 hover:border-white/20 transition-all text-sm">
+                {user?.role !== 'artist' && (
+                  <button onClick={handleWishlist} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border transition-all text-sm ${wishlisted ? 'border-pink-500/40 text-pink-500 bg-pink-500/10 shadow-neon-sm' : 'border-white/10 text-slate-400 hover:border-white/20'}`}>
+                    <Heart className={`w-4 h-4 ${wishlisted ? 'fill-pink-500' : ''}`} /> Wishlist
+                  </button>
+                )}
+                <button className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border border-white/10 text-slate-400 hover:border-white/20 transition-all text-sm ${user?.role === 'artist' ? 'w-full' : ''}`}>
                   <Share2 className="w-4 h-4" /> Share
                 </button>
               </div>

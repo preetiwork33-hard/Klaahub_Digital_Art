@@ -3,18 +3,27 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Heart, ShoppingCart, Star, Eye, CreditCard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { artworkAPI } from '../services/api';
-import { useState } from 'react';
+import { artworkAPI, wishlistAPI } from '../services/api';
+import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
 
 export default function ArtworkCard({ artwork, index = 0 }) {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const { addToCart, isInCart } = useCart();
   const navigate = useNavigate();
   const [liked, setLiked] = useState(artwork.isLiked || false);
   const [likes, setLikes] = useState(artwork.likesCount ?? artwork.likes?.length ?? 0);
+  const [wishlisted, setWishlisted] = useState(false);
   const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setWishlisted(user.wishlist?.includes(artwork._id) || false);
+    } else {
+      setWishlisted(false);
+    }
+  }, [user, artwork._id]);
 
   const imageUrl = (!imgError && artwork.imageUrl) || '/default-art.png';
 
@@ -27,6 +36,33 @@ export default function ArtworkCard({ artwork, index = 0 }) {
       setLiked(res.data.liked);
       setLikes(res.data.likesCount);
     } catch { toast.error('Action failed'); }
+  };
+
+  const handleWishlist = async (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (!user) { toast.error('Please login to add to wishlist'); return; }
+    if (user.role === 'artist') {
+      toast.error('Artists cannot wishlist artworks');
+      return;
+    }
+    try {
+      const res = await wishlistAPI.toggle(artwork._id);
+      if (res.data?.success) {
+        setWishlisted(res.data.inWishlist);
+        setUser(prev => {
+          if (!prev) return prev;
+          const currentWishlist = prev.wishlist || [];
+          const updatedWishlist = res.data.inWishlist
+            ? [...currentWishlist, artwork._id]
+            : currentWishlist.filter(id => id !== artwork._id);
+          return { ...prev, wishlist: updatedWishlist };
+        });
+        toast.success(res.data.inWishlist ? 'Added to wishlist!' : 'Removed from wishlist!');
+      }
+    } catch {
+      toast.error('Failed to update wishlist');
+    }
   };
 
   const handleCart = (e) => {
@@ -82,15 +118,18 @@ export default function ArtworkCard({ artwork, index = 0 }) {
           )}
         </div>
 
-        {/* Like button */}
-        <button
-          onClick={handleLike}
-          className="absolute top-3 right-3 p-2 rounded-xl backdrop-blur-sm bg-black/30 border border-white/10 hover:border-red-400/40 transition-all group/like"
-        >
-          <Heart
-            className={`w-4 h-4 transition-all ${liked ? 'fill-red-400 text-red-400 scale-110' : 'text-white group-hover/like:text-red-400'}`}
-          />
-        </button>
+        {/* Wishlist button */}
+        {user?.role !== 'artist' && (
+          <button
+            onClick={handleWishlist}
+            className="absolute top-3 right-3 p-2 rounded-xl backdrop-blur-sm bg-black/30 border border-white/10 hover:border-pink-400/40 transition-all group/wish z-10"
+            title="Wishlist"
+          >
+            <Heart
+              className={`w-4 h-4 transition-all ${wishlisted ? 'fill-pink-500 text-pink-500 scale-110' : 'text-white group-hover/wish:text-pink-500'}`}
+            />
+          </button>
+        )}
 
         {/* Quick view on hover */}
         <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">

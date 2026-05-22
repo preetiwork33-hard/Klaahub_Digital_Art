@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
@@ -125,7 +125,7 @@ function ArtistsListPage() {
               <span><strong className="text-white">{artist.artworkCount || 0}</strong> works</span>
               <span><strong className="text-white">{((artist.followers || 0) / 1000).toFixed(1)}K</strong> followers</span>
             </div>
-            <a href={`/artists/${artist._id}`} className="btn-outline w-full text-sm py-2 block text-center">View Profile</a>
+            <Link to={`/artists/${artist._id}`} className="btn-outline w-full text-sm py-2 block text-center">View Profile</Link>
           </motion.div>
         ))}
       </div>
@@ -175,21 +175,24 @@ function CategoriesPage() {
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
         {cats.map((cat, i) => (
-          <motion.a
+          <motion.div
             key={cat.name}
-            href={`/explore?category=${encodeURIComponent(cat.name)}`}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: i * 0.06 }}
             whileHover={{ scale: 1.04, y: -4 }}
-            className="glass-card p-6 text-center group hover:border-cyan-neon/40 transition-all"
           >
-            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${cat.color} flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg`}>
-              {cat.icon}
-            </div>
-            <p className="font-bold text-white group-hover:text-cyan-neon transition-colors text-lg">{cat.name}</p>
-            <p className="text-slate-500 text-sm mt-1">{cat.count.toLocaleString()} works</p>
-          </motion.a>
+            <Link
+              to={`/explore?category=${encodeURIComponent(cat.name)}`}
+              className="glass-card p-6 block text-center group hover:border-cyan-neon/40 transition-all"
+            >
+              <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${cat.color} flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg`}>
+                {cat.icon}
+              </div>
+              <p className="font-bold text-white group-hover:text-cyan-neon transition-colors text-lg">{cat.name}</p>
+              <p className="text-slate-500 text-sm mt-1">{cat.count.toLocaleString()} works</p>
+            </Link>
+          </motion.div>
         ))}
       </div>
     </div>
@@ -203,7 +206,7 @@ function NotFoundPage() {
         <div className="text-9xl font-black neon-text mb-4" style={{ fontFamily: 'Outfit' }}>404</div>
         <h2 className="text-3xl font-bold text-white mb-3">Page Not Found</h2>
         <p className="text-slate-400 mb-8">The page you're looking for doesn't exist.</p>
-        <a href="/" className="btn-primary">Go Home</a>
+        <Link to="/" className="btn-primary">Go Home</Link>
       </div>
     </div>
   );

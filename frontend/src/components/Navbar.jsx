@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, ShoppingCart, User, Menu, X, Palette, ChevronDown,
-  LogOut, LayoutDashboard, Heart, Package, Settings, Bell
+  LogOut, LayoutDashboard, Heart, Package, Bell
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -189,9 +189,7 @@ export default function Navbar() {
                         <Link to={getOrdersPath()} className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:text-cyan-neon hover:bg-white/5 transition-all">
                           <Package className="w-4 h-4" /> Orders
                         </Link>
-                        <Link to="/settings" className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:text-cyan-neon hover:bg-white/5 transition-all">
-                          <Settings className="w-4 h-4" /> Settings
-                        </Link>
+
                         <div className="border-t border-white/5 mt-1">
                           <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-all">
                             <LogOut className="w-4 h-4" /> Sign Out
